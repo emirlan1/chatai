@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Chat;
+use App\Models\Message;
 use App\Services\ChatGptService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ChatController extends Controller
 {
@@ -19,20 +21,35 @@ class ChatController extends Controller
     {
         try {
             if ($request->isMethod('post')) {
-                if ($request->input('id')) {
-                    $chat = Chat::findOrFail($request->input('id'));
-                    $messages = $chat->context;
-                }
+
+                $chat = Chat::firstOrCreate([
+                    'id' => $request->input('id'),
+                    'user_id' => Auth::id()
+                ],
+                [
+                    'name' => 'blablabla'
+                ]);
+
+                //Запись сообщения пользователя
+                $message = new Message([
+                    'chat_id' => $chat->id,
+                    'model' => 3,
+                    'content' => $request->input('prompt')
+                ]);
+                $message->save();
+
+                //Запрос к боту
                 $messages[] = ['role' => 'user', 'content' => $request->input('prompt')];
                 $response = $this->chatGptService->sendMessage($messages);
-                $messages[] = ['role' => 'assistant', 'content' => $response['choices'][0]['message']['content']];
-                $chat = Chat::updateOrCreate([
-                    'id' => $request->input('id'),
-                    'user_id' => 1
-                ],
-                    [
-                        'context' => $messages
-                    ]);
+
+                //Запись Ответа Бота
+                $message = new Message([
+                    'chat_id' => $chat->id,
+                    'model' => 3,
+                    'content' => $response['choices'][0]['message']['content']
+                ]);
+                $message->save();
+
 
                 return response()->json(['response' => $response, 'chat_id' => $chat->id]);
             }
@@ -40,7 +57,7 @@ class ChatController extends Controller
             dd([$e->getMessage(), $e->getLine()]);
         }
 
-        $chats = Chat::all();
+        $chats = Chat::where('user_id', Auth::id())->get();
         return view('chat', ['chats' => $chats]);
     }
 
@@ -49,8 +66,12 @@ class ChatController extends Controller
         $messages = [];
         if ($request->isMethod('post')) {
             if ($request->input('id')) {
-                $chat = Chat::findOrFail($request->input('id'));
-                $messages = $chat->context;
+                try {
+                    $chat = Chat::where('id', $request->input('id'))->where('user_id', Auth::id())->first();
+                } catch (\Exception $e) {
+                    dd($e->getMessage());
+                }
+                $messages = $chat->messages;
             }
         }
         return view('chatscreen', ['messages' => $messages]);

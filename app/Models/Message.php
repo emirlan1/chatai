@@ -6,7 +6,7 @@ use App;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Chat extends Model
+class Message extends Model
 {
     use HasFactory;
 
@@ -16,8 +16,8 @@ class Chat extends Model
         'context' => 'array'
     ];
 
-    public function messages()
+    public function chat()
     {
-        return $this->hasMany(Message::class, 'chat_id', 'id');
+        return $this->belongsTo( Chat::class, 'id', 'chat_id');
     }
 }
