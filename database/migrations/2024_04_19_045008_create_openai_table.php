@@ -11,12 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('messages', function (Blueprint $table) {
+        Schema::create('openai', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('chat_id');
             $table->foreign('chat_id')->references('id')->on('chats');
-            $table->integer('user_type');
-            $table->text('message');
+            $table->string('model');
+            $table->integer('input_tokens')->nullable();
+            $table->integer('output_tokens')->nullable();
+            $table->integer('seconds')->nullable();
+            $table->text('content');
+            $table->float('executionTime')->nullable();
             $table->timestamps();
         });
     }
@@ -26,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('messages');
+        Schema::dropIfExists('openai');
     }
 };

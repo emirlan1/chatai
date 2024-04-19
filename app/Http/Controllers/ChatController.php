@@ -33,8 +33,8 @@ class ChatController extends Controller
                 //Запись сообщения пользователя
                 $message = new Message([
                     'chat_id' => $chat->id,
-                    'model' => 3,
-                    'content' => $request->input('prompt')
+                    'user_type' => 1,
+                    'message' => $request->input('prompt')
                 ]);
                 $message->save();
 
@@ -45,11 +45,10 @@ class ChatController extends Controller
                 //Запись Ответа Бота
                 $message = new Message([
                     'chat_id' => $chat->id,
-                    'model' => 3,
-                    'content' => $response['choices'][0]['message']['content']
+                    'user_type' => 0,
+                    'message' => $response['choices'][0]['message']['content']
                 ]);
                 $message->save();
-
 
                 return response()->json(['response' => $response, 'chat_id' => $chat->id]);
             }
