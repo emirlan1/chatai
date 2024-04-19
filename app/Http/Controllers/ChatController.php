@@ -25,10 +25,19 @@ class ChatController extends Controller
                 $chat = Chat::firstOrCreate([
                     'id' => $request->input('id'),
                     'user_id' => Auth::id()
-                ],
-                [
-                    'name' => 'blablabla'
                 ]);
+
+                if ($chat->wasRecentlyCreated) {
+                    $text = 'Привет! Давай создадим уникальное короткое название для следующего чата основываясь на сообщении пользователя: ' . $request->input('prompt');
+                    $promt[] = [
+                        'role' => 'user',
+                        'content' => $text
+                    ];
+                    $response = $this->chatGptService->sendMessage($promt);
+                    $chat->name = $response['choices'][0]['message']['content'];
+                    $chat->save();
+                }
+
 
                 //Запись сообщения пользователя
                 $message = new Message([

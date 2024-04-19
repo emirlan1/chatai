@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('chats', function (Blueprint $table) {
             $table->dropColumn('context');
-            $table->string('name')->after('id');
+            $table->string('name')->nullable()->after('id');
         });
     }
 
