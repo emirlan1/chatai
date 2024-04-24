@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Chat;
 use App\Models\Message;
+use App\Models\Openai;
 use App\Services\ChatGptService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -50,8 +51,19 @@ class ChatController extends Controller
                 //Запрос к боту
                 $messages[] = ['role' => 'user', 'content' => $request->input('prompt')];
                 $response = $this->chatGptService->sendMessage($messages);
+                $model = $response['model'];
+                $input_tokens = $response['usage']['prompt_tokens'];
+                $output_tokens = $response['usage']['completion_tokens'];
 
                 //Запись Ответа Бота
+                $log = new Openai([
+                    'chat_id' => $chat->id,
+                    'model' => $model,
+                    'input_tokens' => $input_tokens,
+                    'output_tokens' => $output_tokens,
+                    'content' => $response['choices'][0]['message']['content']
+                ]);
+                $log->save();
                 $message = new Message([
                     'chat_id' => $chat->id,
                     'user_type' => 0,
@@ -89,7 +101,7 @@ class ChatController extends Controller
     {
         $chatLists = [];
         if ($request->isMethod('post')) {
-            $chatLists = Chat::all();
+            $chatLists = Chat::where('user_id', Auth::id())->get();
         }
         return view('chatlist', ['chats' => $chatLists]);
     }
