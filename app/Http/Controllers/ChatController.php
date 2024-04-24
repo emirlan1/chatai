@@ -22,7 +22,7 @@ class ChatController extends Controller
     {
         try {
             if ($request->isMethod('post')) {
-
+                $startTime = microtime(true);
                 $chat = Chat::firstOrCreate([
                     'id' => $request->input('id'),
                     'user_id' => Auth::id()
@@ -49,18 +49,29 @@ class ChatController extends Controller
                 $message->save();
 
                 //Запрос к боту
+                foreach ($chat->messages()->take(10)->get() as $row) {
+                    $messages[] = array(
+                        'role' => $row->user_type ? 'assistant' : 'user',
+                        'content' => $row->message,
+                    );
+                }
+
                 $messages[] = ['role' => 'user', 'content' => $request->input('prompt')];
                 $response = $this->chatGptService->sendMessage($messages);
                 $model = $response['model'];
                 $input_tokens = $response['usage']['prompt_tokens'];
                 $output_tokens = $response['usage']['completion_tokens'];
 
+
                 //Запись Ответа Бота
+                $endTime = microtime(true);
+                $executionTime = $endTime - $startTime;
                 $log = new Openai([
                     'chat_id' => $chat->id,
                     'model' => $model,
                     'input_tokens' => $input_tokens,
                     'output_tokens' => $output_tokens,
+                    'executionTime' => $executionTime,
                     'content' => $response['choices'][0]['message']['content']
                 ]);
                 $log->save();
