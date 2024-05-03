@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,6 +19,11 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::middleware('auth')->group(function () {
+        Route::get('/subscribe-to-plan', [InvoiceController::class, 'subscribeToPlan']);
+});
+
 
 Route::get('/chat/{id?}', [ChatController::class, 'index'])->middleware('auth');;
 Route::post('/chat', [ChatController::class, 'index'])->middleware('auth');;
