@@ -49,7 +49,7 @@ class ChatController extends Controller
                 $message->save();
 
                 //Запрос к боту
-                foreach ($chat->messages()->take(10)->get() as $row) {
+                foreach ($chat->messages()->get() as $row) {
                     $messages[] = array(
                         'role' => $row->user_type ? 'assistant' : 'user',
                         'content' => $row->message,
